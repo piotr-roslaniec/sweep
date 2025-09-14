@@ -3,6 +3,8 @@ use std::io::{stdin, stdout, Write};
 
 use yansi::{Color, Paint};
 
+use crate::plugins::large_files::LargeFilePlugin;
+use crate::plugins::{FeaturePlugin, Plugin};
 use crate::project::Project;
 use crate::settings::{Settings, SettingsError};
 
@@ -42,6 +44,75 @@ fn main() {
 
     for path in &settings.paths {
         output::println("Path", Color::Blue, path.to_str().unwrap_or(""));
+    }
+
+    // Check if large files plugin is enabled
+    if settings.enable_large_files {
+        output::println("Mode", Color::Cyan, "Large file detection enabled");
+
+        // Initialize and configure the plugin
+        let mut plugin = LargeFilePlugin::new();
+        if let Err(e) = plugin.configure(&settings) {
+            output::error(format!("Failed to configure large files plugin: {}", e));
+            return;
+        }
+
+        // Scan for large files
+        for path in &settings.paths {
+            output::println("Scanning", Color::Blue, path.to_str().unwrap_or(""));
+
+            match plugin.scan(path) {
+                Ok(results) => {
+                    if !results.is_empty() {
+                        output::println(
+                            "Found",
+                            Color::Yellow,
+                            &format!("{} large files", results.len()),
+                        );
+
+                        // Use interactive selection
+                        match plugin.interactive_select(results) {
+                            Ok(selected) => {
+                                if !selected.is_empty() {
+                                    output::println(
+                                        "Selected",
+                                        Color::Green,
+                                        &format!("{} files to clean", selected.len()),
+                                    );
+
+                                    // Clean selected files
+                                    match plugin.clean(selected) {
+                                        Ok(report) => {
+                                            output::println(
+                                                "Cleaned",
+                                                Color::Green,
+                                                &format!(
+                                                    "{} files, freed {} bytes",
+                                                    report.items_cleaned, report.space_freed
+                                                ),
+                                            );
+                                        }
+                                        Err(e) => {
+                                            output::error(format!("Cleanup failed: {}", e));
+                                        }
+                                    }
+                                }
+                            }
+                            Err(e) => {
+                                output::error(format!("Selection failed: {}", e));
+                            }
+                        }
+                    } else {
+                        output::println_info("No large files found");
+                    }
+                }
+                Err(e) => {
+                    output::error(format!("Scan failed: {}", e));
+                }
+            }
+        }
+
+        return; // Don't proceed with regular sweep when in large files mode
     }
 
     // Discover cleanable projects
