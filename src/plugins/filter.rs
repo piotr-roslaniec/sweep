@@ -3,8 +3,8 @@ use git2::{Repository, Status};
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
 use std::collections::HashMap;
 use std::fs::Metadata;
-/// Smart filtering engine for file analysis
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, RwLock};
 use std::time::{Duration, SystemTime};
 
 /// File type classification
@@ -36,15 +36,18 @@ pub enum GitFileStatus {
 pub struct SmartFilter {
     git_repos: HashMap<PathBuf, Repository>,
     gitignore_cache: HashMap<PathBuf, Gitignore>,
+    repo_root_cache: Arc<RwLock<HashMap<PathBuf, Option<PathBuf>>>>,
     protected_patterns: Vec<String>,
     test_data_patterns: Vec<String>,
 }
 
 impl std::fmt::Debug for SmartFilter {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let repo_cache_len = self.repo_root_cache.read().map(|c| c.len()).unwrap_or(0);
         f.debug_struct("SmartFilter")
             .field("git_repos_count", &self.git_repos.len())
             .field("gitignore_cache_count", &self.gitignore_cache.len())
+            .field("repo_root_cache_count", &repo_cache_len)
             .field("protected_patterns", &self.protected_patterns)
             .field("test_data_patterns", &self.test_data_patterns)
             .finish()
@@ -57,6 +60,7 @@ impl SmartFilter {
         SmartFilter {
             git_repos: HashMap::new(),
             gitignore_cache: HashMap::new(),
+            repo_root_cache: Arc::new(RwLock::new(HashMap::new())),
             protected_patterns: vec![
                 ".env".to_string(),
                 ".env.*".to_string(),
@@ -118,11 +122,37 @@ impl SmartFilter {
         Ok(())
     }
 
+    /// Find repository root for a path with caching
+    fn find_repo_root(&self, path: &Path) -> Option<PathBuf> {
+        // Check cache first
+        if let Ok(cache) = self.repo_root_cache.read() {
+            if let Some(cached_result) = cache.get(path) {
+                return cached_result.clone();
+            }
+        }
+
+        // Find repository containing this path
+        let mut result = None;
+        for repo_path in self.git_repos.keys() {
+            if path.starts_with(repo_path) {
+                result = Some(repo_path.clone());
+                break;
+            }
+        }
+
+        // Cache the result (even if None)
+        if let Ok(mut cache) = self.repo_root_cache.write() {
+            cache.insert(path.to_path_buf(), result.clone());
+        }
+
+        result
+    }
+
     /// Get git status for a file
     pub fn get_git_status(&self, file_path: &Path) -> GitFileStatus {
-        // Find the repository containing this file
-        for (repo_path, repo) in &self.git_repos {
-            if file_path.starts_with(repo_path) {
+        // Find the repository containing this file using cache
+        if let Some(repo_path) = self.find_repo_root(file_path) {
+            if let Some(repo) = self.git_repos.get(&repo_path) {
                 // Get relative path from repository root
                 if let Ok(relative_path) = file_path.strip_prefix(repo_path) {
                     // Check file status

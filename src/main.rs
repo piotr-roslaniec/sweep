@@ -7,7 +7,6 @@ use crate::project::Project;
 use crate::settings::{Settings, SettingsError};
 
 mod output;
-#[allow(dead_code)]
 mod plugins;
 mod project;
 mod settings;

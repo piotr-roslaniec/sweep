@@ -1,4 +1,5 @@
 use super::filter::{FileType, GitFileStatus, SmartFilter};
+use super::progress::ScanProgress;
 use super::{CleanupReport, FeaturePlugin, Plugin, PluginError, RiskLevel, ScanResult};
 use crate::settings::Settings;
 use crossbeam::channel::unbounded;
@@ -164,9 +165,17 @@ impl LargeFilePlugin {
             .filter_map(|e| e.ok())
             .collect();
 
+        // Create progress bar
+        let progress = Arc::new(ScanProgress::new(entries.len() as u64));
+        let progress_clone = Arc::clone(&progress);
+
         // Process entries in parallel
         entries.par_iter().for_each_with(tx, |tx, entry| {
+            // Update progress
+            progress_clone.update(entry.path());
+
             if let Some(large_file) = plugin_for_scan.process_entry(entry.clone()) {
+                progress_clone.found_file();
                 let _ = tx.send(large_file);
             }
         });
@@ -176,6 +185,9 @@ impl LargeFilePlugin {
         while let Ok(file) = rx.try_recv() {
             results.push(file);
         }
+
+        // Finish progress bar
+        progress.finish();
 
         // Sort by size (largest first)
         results.sort_by(|a, b| b.size.cmp(&a.size));

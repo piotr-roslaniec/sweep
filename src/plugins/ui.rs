@@ -4,8 +4,35 @@ use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use std::io;
+use std::io::{self, stdout};
 use std::time::Duration;
+
+/// Guard that ensures terminal is cleaned up on panic or drop
+struct TerminalCleanupGuard;
+
+impl TerminalCleanupGuard {
+    fn new() -> Self {
+        // Set up panic hook to clean up terminal
+        let original_hook = std::panic::take_hook();
+        std::panic::set_hook(Box::new(move |panic_info| {
+            // Clean up terminal before panicking
+            let _ = disable_raw_mode();
+            let _ = execute!(stdout(), LeaveAlternateScreen);
+            // Call the original panic hook
+            original_hook(panic_info);
+        }));
+        TerminalCleanupGuard
+    }
+}
+
+impl Drop for TerminalCleanupGuard {
+    fn drop(&mut self) {
+        // Ensure terminal is cleaned up when guard is dropped
+        let _ = disable_raw_mode();
+        let _ = execute!(stdout(), LeaveAlternateScreen);
+    }
+}
+
 use tui::{
     backend::CrosstermBackend,
     layout::{Alignment, Constraint, Direction, Layout},
@@ -68,6 +95,9 @@ impl InteractiveSelector {
             return Ok(vec![]);
         }
 
+        // Create cleanup guard to ensure terminal is restored even on panic
+        let _guard = TerminalCleanupGuard::new();
+
         // Setup terminal
         enable_raw_mode()?;
         let mut stdout = io::stdout();
@@ -77,7 +107,7 @@ impl InteractiveSelector {
 
         let result = self.run_ui(&mut terminal);
 
-        // Restore terminal
+        // Restore terminal (guard will also handle this if we panic)
         disable_raw_mode()?;
         execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
         terminal.show_cursor()?;

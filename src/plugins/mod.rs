@@ -67,6 +67,7 @@ pub enum PluginError {
     Scan(String),
     Cleanup(String),
     Io(std::io::Error),
+    LockError(String),
 }
 
 impl From<std::io::Error> for PluginError {
@@ -82,6 +83,7 @@ impl std::fmt::Display for PluginError {
             PluginError::Scan(msg) => write!(f, "Scan error: {}", msg),
             PluginError::Cleanup(msg) => write!(f, "Cleanup error: {}", msg),
             PluginError::Io(err) => write!(f, "IO error: {}", err),
+            PluginError::LockError(msg) => write!(f, "Lock error: {}", msg),
         }
     }
 }
@@ -90,6 +92,7 @@ impl std::error::Error for PluginError {}
 
 pub mod filter;
 pub mod large_files;
+pub mod progress;
 pub mod ui;
 pub mod utils;
 
