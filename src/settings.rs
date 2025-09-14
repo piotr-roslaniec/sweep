@@ -126,10 +126,10 @@ impl Settings {
         let re = self.ignore.as_ref().unwrap();
         let path = path.to_str().unwrap_or("");
 
-        if path.len() == 0 {
-            return false;
+        if path.is_empty() {
+            false
         } else {
-            return re.is_match(path);
+            re.is_match(path)
         }
     }
 }
@@ -159,7 +159,7 @@ mod tests {
             settings.validate().is_ok(),
             "An error occured while validating settings struct"
         );
-        assert!(settings.paths.len() > 0, "Settings contains no paths");
+        assert!(!settings.paths.is_empty(), "Settings contains no paths");
     }
 
     #[test]
@@ -207,8 +207,8 @@ mod tests {
             include_git_tracked: false,
         };
 
-        assert_eq!(settings.is_path_ignored(Path::new("./src")), true);
-        assert_eq!(settings.is_path_ignored(Path::new("./foo")), false);
+        assert!(settings.is_path_ignored(Path::new("./src")));
+        assert!(!settings.is_path_ignored(Path::new("./foo")));
     }
 
     #[test]

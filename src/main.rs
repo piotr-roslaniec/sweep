@@ -131,7 +131,7 @@ fn main() {
     // Figure out which directories can be deleted
     let delete_dirs = analyse_projects::analyse_projects(cleanables, &settings);
 
-    if delete_dirs.len() == 0 {
+    if delete_dirs.is_empty() {
         output::println_plain(Some(Color::Yellow), "No sweepable projects found");
         output::println_plain(
             None,
@@ -146,7 +146,7 @@ fn main() {
     }
 
     let message = if delete_dirs.len() == 1 {
-        format!("Found 1 directory that can be deleted:")
+        "Found 1 directory that can be deleted:".to_string()
     } else {
         format!(
             "Found {} directories that can be deleted:",
@@ -195,17 +195,14 @@ fn main() {
 
     for dir in delete_dirs {
         output::print("Deleting", Color::Cyan, dir.to_str().unwrap_or(""));
-        match remove_dir_all(&dir) {
-            Err(error) => {
-                println!();
-                output::error(format!(
-                    "Could not delete directory {}",
-                    &dir.to_str().unwrap_or("")
-                ));
-                output::println_info(error.to_string());
-                return;
-            }
-            _ => (),
+        if let Err(error) = remove_dir_all(&dir) {
+            println!();
+            output::error(format!(
+                "Could not delete directory {}",
+                &dir.to_str().unwrap_or("")
+            ));
+            output::println_info(error.to_string());
+            return;
         }
     }
 

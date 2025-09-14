@@ -63,6 +63,7 @@ impl ScanProgress {
     }
 
     /// Finish with an error message
+    #[allow(dead_code)]
     pub fn finish_with_error(&self, error: &str) {
         self.bar.finish_with_message(format!("Error: {}", error));
     }
@@ -77,6 +78,7 @@ impl Drop for ScanProgress {
 }
 
 /// Progress tracker for cleanup operations
+#[allow(dead_code)]
 pub struct CleanupProgress {
     bar: ProgressBar,
     space_freed: AtomicUsize,
@@ -84,6 +86,7 @@ pub struct CleanupProgress {
 
 impl CleanupProgress {
     /// Create a new progress bar for cleanup
+    #[allow(dead_code)]
     pub fn new(total_files: u64) -> Self {
         let bar = ProgressBar::new(total_files);
         bar.set_style(
@@ -100,6 +103,7 @@ impl CleanupProgress {
     }
 
     /// Update progress when a file is deleted
+    #[allow(dead_code)]
     pub fn file_deleted(&self, path: &Path, size: u64) {
         let freed = self.space_freed.fetch_add(size as usize, Ordering::SeqCst) + size as usize;
 

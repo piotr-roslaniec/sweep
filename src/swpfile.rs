@@ -11,7 +11,7 @@ pub fn parse_swpfile<P: AsRef<Path>>(dir: P, filename: P) -> Result<Vec<String>>
     for line in reader.lines() {
         let line = line?.trim().to_owned();
 
-        if line.len() < 1 {
+        if line.is_empty() {
             continue;
         }
         if line.starts_with('#') {

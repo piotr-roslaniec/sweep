@@ -82,7 +82,7 @@ pub fn filter_by_modified_date(projects: SegQueue<Project>) -> SegQueue<Project>
         ));
     }
 
-    return old_projects;
+    old_projects
 }
 
 fn find_modified_date_of_directory(

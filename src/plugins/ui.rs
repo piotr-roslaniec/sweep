@@ -455,13 +455,7 @@ impl InteractiveSelector {
     fn page_up(&mut self) {
         let page_size = 10;
         let i = match self.list_state.selected() {
-            Some(i) => {
-                if i >= page_size {
-                    i - page_size
-                } else {
-                    0
-                }
-            }
+            Some(i) => i.saturating_sub(page_size),
             None => 0,
         };
         self.list_state.select(Some(i));

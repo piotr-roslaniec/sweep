@@ -93,9 +93,9 @@ impl LargeFilePlugin {
         // Use smart filter for enhanced analysis
         let filter = self.filter.lock().ok()?;
         let path = entry.path();
-        let file_type = filter.detect_file_type(&path);
-        let git_status = filter.get_git_status(&path);
-        let risk_level = filter.calculate_risk_level(&path, &metadata, self.include_git_tracked);
+        let file_type = filter.detect_file_type(path);
+        let git_status = filter.get_git_status(path);
+        let risk_level = filter.calculate_risk_level(path, &metadata, self.include_git_tracked);
 
         // Skip critical risk files unless explicitly included
         if risk_level == RiskLevel::Critical && !self.include_git_tracked {

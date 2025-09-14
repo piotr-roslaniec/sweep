@@ -29,7 +29,7 @@ pub fn analyse_projects(projects: SegQueue<Project>, settings: &Settings) -> Vec
         filter_by_modified_date(projects)
     };
 
-    if filtered.len() == 0 {
+    if filtered.is_empty() {
         return Vec::new();
     }
 
@@ -39,5 +39,5 @@ pub fn analyse_projects(projects: SegQueue<Project>, settings: &Settings) -> Vec
     }
 
     dirs.sort();
-    return dirs;
+    dirs
 }

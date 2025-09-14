@@ -67,6 +67,7 @@ pub struct CleanupReport {
 
 /// Plugin-specific errors
 #[derive(Debug)]
+#[allow(dead_code)]
 pub enum PluginError {
     Configuration(String),
     Scan(String),

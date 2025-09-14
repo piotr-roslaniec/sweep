@@ -106,7 +106,7 @@ fn test_risk_levels() {
     assert_eq!(RiskLevel::Medium, RiskLevel::Medium);
 
     // Test ordering (for potential sorting)
-    let levels = vec![
+    let levels = [
         RiskLevel::Critical,
         RiskLevel::Safe,
         RiskLevel::High,

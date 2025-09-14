@@ -10,7 +10,7 @@ use std::path::Path;
 /// # Returns
 /// True if `filename` exists in `path`
 pub fn exists_in_path(path: &Path, filename: &str) -> bool {
-    path.clone().join(filename).exists()
+    path.join(filename).exists()
 }
 
 /// Gets the filename of a path
@@ -39,14 +39,14 @@ mod test {
         test_utils::with_temp_dir(|dir| {
             test_utils::create_file(dir, "test_file.txt");
 
-            assert_eq!(exists_in_path(&dir, "test_file.txt"), true);
+            assert!(exists_in_path(dir, "test_file.txt"));
         });
     }
 
     #[test]
     fn file_does_not_exist() {
         test_utils::with_temp_dir(|dir| {
-            assert_eq!(exists_in_path(&dir, "test_file.txt"), false);
+            assert!(!exists_in_path(dir, "test_file.txt"));
         });
     }
 
@@ -55,14 +55,14 @@ mod test {
         test_utils::with_temp_dir(|dir| {
             test_utils::create_dir(dir, "test_dir");
 
-            assert_eq!(exists_in_path(&dir, "test_dir"), true);
+            assert!(exists_in_path(dir, "test_dir"));
         });
     }
 
     #[test]
     fn directory_does_not_exist() {
         test_utils::with_temp_dir(|dir| {
-            assert_eq!(exists_in_path(&dir, "test_dir"), false);
+            assert!(!exists_in_path(dir, "test_dir"));
         });
     }
 

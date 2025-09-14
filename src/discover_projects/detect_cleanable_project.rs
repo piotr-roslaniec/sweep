@@ -18,7 +18,7 @@ pub fn detect_cleanable_project(path: &Path) -> Option<Project> {
     }
 
     // Create an empty project so we can add cleanable directories to it
-    let mut project = Project::new(path.clone());
+    let mut project = Project::new(path);
 
     // This flag will keep track of whether we've found a project
     let mut is_project = false;
@@ -61,9 +61,9 @@ pub fn detect_cleanable_project(path: &Path) -> Option<Project> {
     }
 
     if is_project {
-        return Some(project);
+        Some(project)
     } else {
-        return None;
+        None
     }
 }
 
@@ -165,7 +165,7 @@ mod test {
     fn empty_dir() {
         test_utils::with_temp_dir(|dir| {
             assert!(
-                detect_cleanable_project(&dir).is_none(),
+                detect_cleanable_project(dir).is_none(),
                 "Project detected in empty directory"
             );
         });
@@ -179,7 +179,7 @@ mod test {
             test_utils::create_file(dir, "no_project_here.txt");
 
             assert!(
-                detect_cleanable_project(&dir).is_none(),
+                detect_cleanable_project(dir).is_none(),
                 "Project detected in unrelated directory"
             );
         });

@@ -41,16 +41,16 @@ pub fn discover_projects(settings: &Settings) -> Option<SegQueue<Project>> {
     // will finish faster and there will be less risk of threads timing out
     // before all paths have been processed.
     for path in &settings.paths {
-        if let Some(project) = detect_cleanable_project(&path) {
+        if let Some(project) = detect_cleanable_project(path) {
             discovered.push(project);
         } else {
-            discover_projects_in_directory(&path, &settings, &path_queue, &discovered);
+            discover_projects_in_directory(path, settings, &path_queue, &discovered);
         }
     }
 
     // If there was only one level to crawl, the queue will be empty after this
     // and the thread creation can be skipped entirely
-    if path_queue.len() > 0 {
+    if !path_queue.is_empty() {
         // I've set the number of threads to twice the number of CPU cores but
         // this is not based on any real insights. It is an assumption of what
         // might be a good balance between read speed, disk usage and CPU usage.
@@ -65,7 +65,7 @@ pub fn discover_projects(settings: &Settings) -> Option<SegQueue<Project>> {
                 output::print("Searching", Color::Cyan, path.to_str().unwrap_or(""));
 
                 total_paths.fetch_add(1, Ordering::SeqCst);
-                discover_projects_in_directory(&path, &settings, &path_queue, &discovered);
+                discover_projects_in_directory(&path, settings, &path_queue, &discovered);
             },
             |tries| {
                 output::print("Searching", Color::Cyan, &".".repeat(tries));
@@ -75,13 +75,13 @@ pub fn discover_projects(settings: &Settings) -> Option<SegQueue<Project>> {
 
     let total_paths = total_paths.into_inner();
     let message = if total_paths == 1 {
-        format!("1 directory searched")
+        "1 directory searched".to_string()
     } else {
         format!("{} directories searched", total_paths)
     };
     output::println("Searched", Color::Green, &message);
 
-    if discovered.len() == 0 {
+    if discovered.is_empty() {
         None
     } else {
         Some(discovered)

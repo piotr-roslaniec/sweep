@@ -48,7 +48,7 @@ where
     T: Send,
 {
     // No use in spawning all these threads and processing an empty queue
-    if queue.len() == 0 {
+    if queue.is_empty() {
         return;
     }
 
