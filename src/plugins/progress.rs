@@ -41,7 +41,8 @@ impl ScanProgress {
 
         // Show current file being scanned in the prefix
         if let Some(file_name) = path.file_name() {
-            self.bar.set_prefix(format!("Scanning: {}", file_name.to_string_lossy()));
+            self.bar
+                .set_prefix(format!("Scanning: {}", file_name.to_string_lossy()));
         }
     }
 
@@ -106,17 +107,16 @@ impl CleanupProgress {
         self.bar.set_message(format_size(freed as u64));
 
         if let Some(file_name) = path.file_name() {
-            self.bar.set_prefix(format!("Deleted: {}", file_name.to_string_lossy()));
+            self.bar
+                .set_prefix(format!("Deleted: {}", file_name.to_string_lossy()));
         }
     }
 
     /// Mark cleanup as complete
     pub fn finish(&self) {
         let freed = self.space_freed.load(Ordering::SeqCst);
-        self.bar.finish_with_message(format!(
-            "Complete! Freed {}",
-            format_size(freed as u64)
-        ));
+        self.bar
+            .finish_with_message(format!("Complete! Freed {}", format_size(freed as u64)));
     }
 }
 
@@ -190,9 +190,12 @@ mod tests {
 
         // Simulate cleanup
         progress.file_deleted(&test_path, 1024 * 1024 * 100); // 100MB
-        progress.file_deleted(&test_path, 1024 * 1024 * 50);  // 50MB
+        progress.file_deleted(&test_path, 1024 * 1024 * 50); // 50MB
 
-        assert_eq!(progress.space_freed.load(Ordering::SeqCst), 1024 * 1024 * 150);
+        assert_eq!(
+            progress.space_freed.load(Ordering::SeqCst),
+            1024 * 1024 * 150
+        );
 
         progress.finish();
     }
