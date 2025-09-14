@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use super::filter::{FileType, GitFileStatus, SmartFilter};
 use super::{CleanupReport, FeaturePlugin, Plugin, PluginError, RiskLevel, ScanResult};
 use crate::settings::Settings;
