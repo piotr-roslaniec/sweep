@@ -1,0 +1,3 @@
+# Spec Summary (Lite)
+
+Implement a large file detection plugin with configurable size thresholds (default 100MB) that integrates with the plugin architecture through command-line flags. The plugin provides smart filtering to protect git-tracked and recently accessed files, presents an interactive selection UI for user review, and supports age-based filtering with `--older-than` flags across all plugins for granular cleanup control.

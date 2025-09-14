@@ -1,0 +1,3 @@
+# Spec Summary (Lite)
+
+Implement Python project support through a new trait-based plugin architecture that enables extensible language detection for Sweep. The plugin system will support all major Python package managers (pip, Poetry, conda, virtualenv), safely clean Python-specific artifacts while respecting .gitignore patterns and protecting sensitive files, and establish a framework for easily adding future language support.

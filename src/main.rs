@@ -10,6 +10,7 @@ mod output;
 mod project;
 mod settings;
 mod swpfile;
+mod plugins;
 
 mod analyse_projects;
 mod discover_projects;
