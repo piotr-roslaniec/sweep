@@ -11,6 +11,7 @@ use std::time::{Duration, SystemTime};
 use walkdir::{DirEntry, WalkDir};
 
 /// File information for large file detection
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct LargeFile {
     pub path: PathBuf,

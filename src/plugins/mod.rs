@@ -4,6 +4,7 @@ use std::path::Path;
 use crate::settings::Settings;
 
 /// Base trait for all plugins (language and feature plugins)
+#[allow(dead_code)]
 pub trait Plugin: Send + Sync + Debug {
     /// Unique identifier for the plugin
     fn name(&self) -> &str;
@@ -22,6 +23,7 @@ pub trait Plugin: Send + Sync + Debug {
 }
 
 /// Trait for feature plugins like large file detection
+#[allow(dead_code)]
 pub trait FeaturePlugin: Plugin {
     /// Scan for items this plugin can clean
     fn scan(&self, path: &Path) -> Result<Vec<ScanResult>, PluginError>;
@@ -34,6 +36,7 @@ pub trait FeaturePlugin: Plugin {
 }
 
 /// Result of a plugin scan
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct ScanResult {
     pub path: std::path::PathBuf,
@@ -43,6 +46,7 @@ pub struct ScanResult {
 }
 
 /// Risk level for cleanup operations
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RiskLevel {
     Safe,
@@ -53,6 +57,7 @@ pub enum RiskLevel {
 }
 
 /// Report after cleanup operations
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct CleanupReport {
     pub items_cleaned: usize,
