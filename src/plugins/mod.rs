@@ -94,4 +94,7 @@ pub mod ui;
 pub mod utils;
 
 #[cfg(test)]
+mod integration_tests;
+
+#[cfg(test)]
 mod tests;
