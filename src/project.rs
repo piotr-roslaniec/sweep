@@ -13,6 +13,7 @@ pub struct Project {
     dependency_dirs: Vec<PathBuf>,
 
     /// Timestamp indicating when the project was last modified
+    #[allow(dead_code)]
     last_modified: u64,
 }
 

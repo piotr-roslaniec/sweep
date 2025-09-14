@@ -126,7 +126,7 @@ impl SmartFilter {
                 // Get relative path from repository root
                 if let Ok(relative_path) = file_path.strip_prefix(repo_path) {
                     // Check file status
-                    if let Ok(status) = repo.status_file(&relative_path) {
+                    if let Ok(status) = repo.status_file(relative_path) {
                         if status.contains(Status::IGNORED) {
                             return GitFileStatus::Ignored;
                         } else if status.contains(Status::WT_NEW) {
@@ -135,8 +135,6 @@ impl SmartFilter {
                             || status.contains(Status::INDEX_MODIFIED)
                         {
                             return GitFileStatus::Modified;
-                        } else if !status.is_empty() {
-                            return GitFileStatus::Tracked;
                         } else {
                             return GitFileStatus::Tracked;
                         }
@@ -185,7 +183,7 @@ impl SmartFilter {
             if file_path.starts_with(dir_path) {
                 if let Ok(relative) = file_path.strip_prefix(dir_path) {
                     let is_dir = file_path.is_dir();
-                    let matched = gitignore.matched(&relative, is_dir);
+                    let matched = gitignore.matched(relative, is_dir);
                     if matched.is_ignore() {
                         return true;
                     }

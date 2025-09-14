@@ -41,18 +41,22 @@ pub struct Settings {
 
     /// Enable Python language plugin
     #[structopt(long = "python")]
+    #[allow(dead_code)]
     pub enable_python: bool,
 
     /// Enable Java language plugin
     #[structopt(long = "java")]
+    #[allow(dead_code)]
     pub enable_java: bool,
 
     /// Enable JavaScript/Node.js language plugin
     #[structopt(long = "javascript")]
+    #[allow(dead_code)]
     pub enable_javascript: bool,
 
     /// Enable Rust language plugin
     #[structopt(long = "rust")]
+    #[allow(dead_code)]
     pub enable_rust: bool,
 
     // Global plugin options

@@ -81,7 +81,7 @@ fn shorten(message: String, max_width: usize) -> String {
 
     let break_index = max_width / 4;
 
-    return [
+    [
         message.chars().take(break_index).collect(),
         "...".to_owned(),
         message
@@ -89,7 +89,7 @@ fn shorten(message: String, max_width: usize) -> String {
             .skip(len - max_width + break_index + 3)
             .collect(),
     ]
-    .join("");
+    .join("")
 }
 
 fn get_term_width() -> usize {
