@@ -1,0 +1,21 @@
+# <type>[optional scope]: <description>
+#
+# [optional body - include issue/comment references]
+#
+# [optional footer - breaking changes, etc.]
+#
+# Types:
+#   feat:     A new feature
+#   fix:      A bug fix
+#   docs:     Documentation only changes
+#   style:    Changes that do not affect meaning (formatting, etc.)
+#   refactor: A code change that neither fixes a bug nor adds a feature
+#   perf:     A code change that improves performance
+#   test:     Adding missing tests or correcting existing tests
+#   build:    Changes that affect the build system or dependencies
+#   ci:       Changes to CI configuration files and scripts
+#   chore:    Other changes that don't modify src or test files
+#
+# Scope examples: plugins, ui, filter, large-files, cli
+#
+# Breaking changes: Add "!" after type or "BREAKING CHANGE:" in footer

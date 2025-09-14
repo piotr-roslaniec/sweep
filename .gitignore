@@ -1,10 +1,40 @@
-/.idea
+# Rust build artifacts
+/target/
+**/*.rs.bk
 
-/node_modules
-/target
-/builds
-/dist
-/docs/.vuepress/dist
+# Editor files
+*.swp
+*.swo
+*~
+.DS_Store
 
-*.rs.bk
+# IDE files
+.vscode/
+.idea/
 *.iml
+
+# Node.js (if present)
+/node_modules/
+
+# Build outputs
+/builds/
+/dist/
+/docs/.vuepress/dist/
+
+# Testing artifacts
+testing-progress.md
+
+# Debug files
+*.pdb
+
+# Git worktree metadata and temporary files
+worktrees/
+tmp/
+tmp-test/
+
+# AI assistant metadata
+.serena/
+.cursor/
+
+# Local settings (keep private)
+.claude/settings.local.json
