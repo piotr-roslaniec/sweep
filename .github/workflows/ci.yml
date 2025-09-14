@@ -65,7 +65,7 @@ jobs:
       - name: Build
         run: cargo build --release --all-features
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: sweep-${{ matrix.os }}
           path: |
