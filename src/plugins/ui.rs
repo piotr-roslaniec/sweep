@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use super::{RiskLevel, ScanResult};
 use crossterm::{
     event::{self, Event, KeyCode, KeyModifiers},

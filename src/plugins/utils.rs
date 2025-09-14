@@ -1,4 +1,6 @@
 /// Utility functions for plugin operations
+#![allow(dead_code)]
+
 use super::PluginError;
 use regex::Regex;
 

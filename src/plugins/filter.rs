@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use super::{PluginError, RiskLevel};
 use git2::{Repository, Status};
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
