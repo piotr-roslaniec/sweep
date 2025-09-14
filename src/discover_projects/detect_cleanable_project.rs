@@ -106,7 +106,7 @@ mod test {
 				assert_eq!(project.into_cleanable_dirs().len(), {
 					#[allow(unused_mut)]
 					let mut i = 0;
-					$(i += 1; $c;)*
+					$(let _ = $c; i += 1;)*
 					i
 				});
 			});
