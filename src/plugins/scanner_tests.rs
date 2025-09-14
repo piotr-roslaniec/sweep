@@ -2,13 +2,13 @@
 #[cfg(test)]
 mod tests {
     use super::super::*;
-    use crate::plugins::{Plugin, FeaturePlugin};
+    use crate::plugins::{FeaturePlugin, Plugin};
     use crate::settings::Settings;
     use std::fs::{self, File};
     use std::io::Write;
     use std::path::Path;
+    use std::time::{Duration, SystemTime};
     use tempdir::TempDir;
-    use std::time::{SystemTime, Duration};
 
     /// Helper to create a file with specified size
     fn create_file_with_size(path: &Path, size_mb: usize) -> std::io::Result<()> {
@@ -59,7 +59,8 @@ mod tests {
         assert_eq!(results.len(), 2);
 
         // Check that large files were found
-        let file_names: Vec<String> = results.iter()
+        let file_names: Vec<String> = results
+            .iter()
             .map(|r| r.path.file_name().unwrap().to_string_lossy().to_string())
             .collect();
 
@@ -82,7 +83,8 @@ mod tests {
         // Should find 3 files over 50MB
         assert_eq!(results.len(), 3);
 
-        let file_names: Vec<String> = results.iter()
+        let file_names: Vec<String> = results
+            .iter()
             .map(|r| r.path.file_name().unwrap().to_string_lossy().to_string())
             .collect();
 
@@ -104,7 +106,8 @@ mod tests {
         let results = plugin.scan(temp_dir.path()).unwrap();
 
         // Should not include small files
-        let file_names: Vec<String> = results.iter()
+        let file_names: Vec<String> = results
+            .iter()
             .map(|r| r.path.file_name().unwrap().to_string_lossy().to_string())
             .collect();
 
@@ -181,8 +184,9 @@ mod tests {
             for j in 0..3 {
                 create_file_with_size(
                     &dir.join(format!("file_{}_{}.dat", i, j)),
-                    if j == 0 { 150 } else { 50 }
-                ).unwrap();
+                    if j == 0 { 150 } else { 50 },
+                )
+                .unwrap();
             }
         }
 

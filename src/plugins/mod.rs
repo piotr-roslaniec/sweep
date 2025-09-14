@@ -1,5 +1,5 @@
-use std::path::Path;
 use std::fmt::Debug;
+use std::path::Path;
 
 use crate::settings::Settings;
 

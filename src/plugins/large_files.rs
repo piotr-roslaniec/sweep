@@ -1,13 +1,13 @@
-use std::path::{Path, PathBuf};
-use std::time::{SystemTime, Duration};
-use std::fs;
-use std::sync::{Arc, Mutex};
+use super::filter::{FileType, GitFileStatus, SmartFilter};
+use super::{CleanupReport, FeaturePlugin, Plugin, PluginError, RiskLevel, ScanResult};
 use crate::settings::Settings;
-use super::{Plugin, FeaturePlugin, PluginError, ScanResult, CleanupReport, RiskLevel};
-use super::filter::{SmartFilter, FileType, GitFileStatus};
-use walkdir::{WalkDir, DirEntry};
-use rayon::prelude::*;
 use crossbeam::channel::unbounded;
+use rayon::prelude::*;
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, SystemTime};
+use walkdir::{DirEntry, WalkDir};
 
 /// File information for large file detection
 #[derive(Debug, Clone)]
@@ -52,7 +52,7 @@ impl LargeFilePlugin {
                             Ok(age) => age > Duration::from_secs(days * 24 * 60 * 60),
                             Err(_) => true, // If we can't determine age, include it
                         }
-                    },
+                    }
                     Err(_) => true, // If we can't get access time, include it
                 }
             }
@@ -113,8 +113,10 @@ impl LargeFilePlugin {
 
     /// Initialize git repositories and gitignore caches for a path
     fn initialize_filters(&self, root: &Path) -> Result<(), PluginError> {
-        let mut filter = self.filter.lock().map_err(|e|
-            PluginError::Configuration(format!("Failed to lock filter: {}", e)))?;
+        let mut filter = self
+            .filter
+            .lock()
+            .map_err(|e| PluginError::Configuration(format!("Failed to lock filter: {}", e)))?;
 
         // Discover git repositories
         filter.discover_git_repos(root)?;
@@ -218,34 +220,41 @@ impl FeaturePlugin for LargeFilePlugin {
     fn scan(&self, path: &Path) -> Result<Vec<ScanResult>, PluginError> {
         // Check if path exists
         if !path.exists() {
-            return Err(PluginError::Scan(format!("Path does not exist: {:?}", path)));
+            return Err(PluginError::Scan(format!(
+                "Path does not exist: {:?}",
+                path
+            )));
         }
 
         // Perform parallel scan
         let large_files = self.scan_parallel(path)?;
 
         // Convert to ScanResult with enhanced information
-        let results: Vec<ScanResult> = large_files.into_iter().map(|file| {
-            let size_str = super::utils::format_size(file.size);
-            let age_days = if let Ok(modified) = SystemTime::now().duration_since(file.last_modified) {
-                modified.as_secs() / (24 * 60 * 60)
-            } else {
-                0
-            };
+        let results: Vec<ScanResult> = large_files
+            .into_iter()
+            .map(|file| {
+                let size_str = super::utils::format_size(file.size);
+                let age_days =
+                    if let Ok(modified) = SystemTime::now().duration_since(file.last_modified) {
+                        modified.as_secs() / (24 * 60 * 60)
+                    } else {
+                        0
+                    };
 
-            let type_str = format!("{:?}", file.file_type);
-            let git_str = format!("{:?}", file.git_status);
+                let type_str = format!("{:?}", file.file_type);
+                let git_str = format!("{:?}", file.git_status);
 
-            ScanResult {
-                path: file.path,
-                size: file.size,
-                description: format!(
-                    "{} | {} days old | Type: {} | Git: {}",
-                    size_str, age_days, type_str, git_str
-                ),
-                risk_level: file.risk_level,
-            }
-        }).collect();
+                ScanResult {
+                    path: file.path,
+                    size: file.size,
+                    description: format!(
+                        "{} | {} days old | Type: {} | Git: {}",
+                        size_str, age_days, type_str, git_str
+                    ),
+                    risk_level: file.risk_level,
+                }
+            })
+            .collect();
 
         Ok(results)
     }

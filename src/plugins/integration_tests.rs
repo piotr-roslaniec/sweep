@@ -1,15 +1,12 @@
+use super::{
+    filter::SmartFilter, large_files::LargeFilePlugin, utils, FeaturePlugin, Plugin, RiskLevel,
+};
+use crate::settings::Settings;
+use git2::{Repository, Signature};
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use tempdir::TempDir;
-use git2::{Repository, Signature};
-use crate::settings::Settings;
-use super::{
-    Plugin, FeaturePlugin, RiskLevel,
-    large_files::LargeFilePlugin,
-    filter::SmartFilter,
-    utils
-};
 
 /// Integration test helper to create a test environment
 pub struct TestEnvironment {
@@ -44,7 +41,11 @@ impl TestEnvironment {
     }
 
     /// Create a file with specified size and content
-    pub fn create_file(&self, relative_path: &str, size_bytes: u64) -> Result<PathBuf, Box<dyn std::error::Error>> {
+    pub fn create_file(
+        &self,
+        relative_path: &str,
+        size_bytes: u64,
+    ) -> Result<PathBuf, Box<dyn std::error::Error>> {
         let file_path = self.path().join(relative_path);
 
         // Create parent directories if needed
@@ -82,7 +83,11 @@ impl TestEnvironment {
     }
 
     /// Add and commit a file to git
-    pub fn git_add_and_commit(&self, file_path: &str, message: &str) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn git_add_and_commit(
+        &self,
+        file_path: &str,
+        message: &str,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         if let Some(repo) = &self.repo {
             let mut index = repo.index()?;
             index.add_path(Path::new(file_path))?;
@@ -109,14 +114,7 @@ impl TestEnvironment {
                     &[&parent],
                 )?;
             } else {
-                repo.commit(
-                    Some("HEAD"),
-                    &signature,
-                    &signature,
-                    message,
-                    &tree,
-                    &[],
-                )?;
+                repo.commit(Some("HEAD"), &signature, &signature, message, &tree, &[])?;
             }
         }
         Ok(())
@@ -175,14 +173,21 @@ mod tests {
         assert!(!scan_results.is_empty());
 
         // Verify that .env file is marked as critical risk
-        let env_file_result = scan_results.iter().find(|r| r.path.file_name().unwrap() == "protected.env");
+        let env_file_result = scan_results
+            .iter()
+            .find(|r| r.path.file_name().unwrap() == "protected.env");
         if let Some(result) = env_file_result {
             // .env files are protected and should be critical OR high risk
-            assert!(matches!(result.risk_level, RiskLevel::Critical | RiskLevel::High));
+            assert!(matches!(
+                result.risk_level,
+                RiskLevel::Critical | RiskLevel::High
+            ));
         }
 
         // Test that small files are not included
-        let small_file_result = scan_results.iter().find(|r| r.path.file_name().unwrap() == "small.txt");
+        let small_file_result = scan_results
+            .iter()
+            .find(|r| r.path.file_name().unwrap() == "small.txt");
         assert!(small_file_result.is_none());
 
         Ok(())
@@ -193,7 +198,7 @@ mod tests {
         // Create test environment to test different configurations
         let env = TestEnvironment::new(false)?;
         env.create_file("test1.bin", 200 * 1024 * 1024)?; // 200MB
-        env.create_file("test2.bin", 50 * 1024 * 1024)?;  // 50MB
+        env.create_file("test2.bin", 50 * 1024 * 1024)?; // 50MB
 
         let mut plugin = LargeFilePlugin::new();
 
@@ -240,8 +245,12 @@ mod tests {
         let results = plugin.scan(env.path())?;
 
         // Should find files - behavior may vary based on git tracking rules
-        let tracked_result = results.iter().find(|r| r.path.file_name().unwrap() == "tracked_large.bin");
-        let untracked_result = results.iter().find(|r| r.path.file_name().unwrap() == "untracked_large.bin");
+        let tracked_result = results
+            .iter()
+            .find(|r| r.path.file_name().unwrap() == "tracked_large.bin");
+        let untracked_result = results
+            .iter()
+            .find(|r| r.path.file_name().unwrap() == "untracked_large.bin");
 
         // At least one file should be found (untracked one definitely)
         assert!(untracked_result.is_some());
@@ -277,8 +286,12 @@ mod tests {
         assert!(!results.is_empty());
 
         // Verify gitignored files are handled correctly (marked as safe)
-        let log_result = results.iter().find(|r| r.path.file_name().unwrap() == "application.log");
-        let important_result = results.iter().find(|r| r.path.file_name().unwrap() == "important.bin");
+        let log_result = results
+            .iter()
+            .find(|r| r.path.file_name().unwrap() == "application.log");
+        let important_result = results
+            .iter()
+            .find(|r| r.path.file_name().unwrap() == "important.bin");
 
         // Gitignored files should be marked as safe risk
         if let Some(log) = log_result {
@@ -381,8 +394,12 @@ mod tests {
         assert!(!results.is_empty());
 
         // Verify different file types get appropriate risk levels
-        let db_result = results.iter().find(|r| r.path.file_name().unwrap() == "database.db");
-        let test_result = results.iter().find(|r| r.path.file_name().unwrap() == "test-data.json");
+        let db_result = results
+            .iter()
+            .find(|r| r.path.file_name().unwrap() == "database.db");
+        let test_result = results
+            .iter()
+            .find(|r| r.path.file_name().unwrap() == "test-data.json");
 
         if let Some(db) = db_result {
             assert_eq!(db.risk_level, RiskLevel::High); // Database files are high risk
@@ -390,7 +407,10 @@ mod tests {
 
         if let Some(test) = test_result {
             // Test data files should have low risk or higher due to recent creation
-            assert!(matches!(test.risk_level, RiskLevel::Low | RiskLevel::Medium | RiskLevel::High));
+            assert!(matches!(
+                test.risk_level,
+                RiskLevel::Low | RiskLevel::Medium | RiskLevel::High
+            ));
         }
 
         Ok(())
@@ -400,9 +420,15 @@ mod tests {
     fn test_utils_integration() -> Result<(), Box<dyn std::error::Error>> {
         // Test size parsing with various formats
         assert_eq!(utils::parse_size_string("100MB")?, 100 * 1024 * 1024);
-        assert_eq!(utils::parse_size_string("1.5GB")?, (1.5 * 1024.0 * 1024.0 * 1024.0) as u64);
+        assert_eq!(
+            utils::parse_size_string("1.5GB")?,
+            (1.5 * 1024.0 * 1024.0 * 1024.0) as u64
+        );
         assert_eq!(utils::parse_size_string("500KB")?, 500 * 1024);
-        assert_eq!(utils::parse_size_string("2TB")?, 2 * 1024 * 1024 * 1024 * 1024);
+        assert_eq!(
+            utils::parse_size_string("2TB")?,
+            2 * 1024 * 1024 * 1024 * 1024
+        );
 
         // Test size formatting
         assert_eq!(utils::format_size(1024), "1.00 KB");

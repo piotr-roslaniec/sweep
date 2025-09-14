@@ -1,10 +1,11 @@
-use std::io;
-use std::time::Duration;
+use super::{RiskLevel, ScanResult};
 use crossterm::{
     event::{self, Event, KeyCode, KeyModifiers},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
+use std::io;
+use std::time::Duration;
 use tui::{
     backend::CrosstermBackend,
     layout::{Alignment, Constraint, Direction, Layout},
@@ -13,7 +14,6 @@ use tui::{
     widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
     Frame, Terminal,
 };
-use super::{ScanResult, RiskLevel};
 
 #[derive(Debug, Clone)]
 pub struct SelectableItem {
@@ -85,7 +85,10 @@ impl InteractiveSelector {
         result
     }
 
-    fn run_ui(&mut self, terminal: &mut Terminal<CrosstermBackend<io::Stdout>>) -> io::Result<Vec<ScanResult>> {
+    fn run_ui(
+        &mut self,
+        terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
+    ) -> io::Result<Vec<ScanResult>> {
         loop {
             terminal.draw(|f| self.draw(f))?;
 
@@ -170,7 +173,9 @@ impl InteractiveSelector {
 
     fn draw_header(&self, f: &mut Frame<CrosstermBackend<io::Stdout>>, area: tui::layout::Rect) {
         let selected_count = self.items.iter().filter(|item| item.selected).count();
-        let total_size = self.items.iter()
+        let total_size = self
+            .items
+            .iter()
             .filter(|item| item.selected)
             .map(|item| item.scan_result.size)
             .sum::<u64>();
@@ -185,18 +190,26 @@ impl InteractiveSelector {
 
         let header_text = format!(
             "Large Files - Selected: {}/{} ({}) - Sort: {} - Press 'h' for help",
-            selected_count, self.items.len(), size_str, sort_indicator
+            selected_count,
+            self.items.len(),
+            size_str,
+            sort_indicator
         );
 
         let header = Paragraph::new(header_text)
-            .block(Block::default().borders(Borders::ALL).title("Sweep Large File Cleanup"))
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .title("Sweep Large File Cleanup"),
+            )
             .wrap(Wrap { trim: true });
 
         f.render_widget(header, area);
     }
 
     fn draw_file_list(&self, f: &mut Frame<CrosstermBackend<io::Stdout>>, area: tui::layout::Rect) {
-        let items: Vec<ListItem> = self.items
+        let items: Vec<ListItem> = self
+            .items
             .iter()
             .map(|item| {
                 let checkbox = if item.selected { "☑" } else { "☐" };
@@ -214,7 +227,10 @@ impl InteractiveSelector {
 
                 let line = Spans::from(vec![
                     Span::raw(format!("{} ", checkbox)),
-                    Span::styled(format!("{:>8} ", size_str), Style::default().fg(Color::Cyan)),
+                    Span::styled(
+                        format!("{:>8} ", size_str),
+                        Style::default().fg(Color::Cyan),
+                    ),
                     Span::styled(format!("{:>8} ", risk_str), Style::default().fg(risk_color)),
                     Span::raw(path_str),
                 ]);
@@ -225,14 +241,19 @@ impl InteractiveSelector {
 
         let list = List::new(items)
             .block(Block::default().borders(Borders::ALL).title("Files"))
-            .highlight_style(Style::default().bg(Color::DarkGray).add_modifier(Modifier::BOLD))
+            .highlight_style(
+                Style::default()
+                    .bg(Color::DarkGray)
+                    .add_modifier(Modifier::BOLD),
+            )
             .highlight_symbol("► ");
 
         f.render_stateful_widget(list, area, &mut self.list_state.clone());
     }
 
     fn draw_footer(&self, f: &mut Frame<CrosstermBackend<io::Stdout>>, area: tui::layout::Rect) {
-        let footer_text = "Space: Toggle | Enter: Confirm | a: Toggle All | s: Sort | q/Esc: Cancel | h: Help";
+        let footer_text =
+            "Space: Toggle | Enter: Confirm | a: Toggle All | s: Sort | q/Esc: Cancel | h: Help";
         let footer = Paragraph::new(footer_text)
             .block(Block::default().borders(Borders::ALL))
             .alignment(Alignment::Center);
@@ -275,7 +296,7 @@ impl InteractiveSelector {
             help_text
                 .into_iter()
                 .map(|line| Spans::from(Span::raw(line)))
-                .collect::<Vec<_>>()
+                .collect::<Vec<_>>(),
         )
         .block(Block::default().borders(Borders::ALL).title("Help"))
         .wrap(Wrap { trim: true });
@@ -318,12 +339,14 @@ impl InteractiveSelector {
     fn sort_items(&mut self) {
         match self.sort_by {
             SortBy::Size => {
-                self.items.sort_by(|a, b| b.scan_result.size.cmp(&a.scan_result.size));
+                self.items
+                    .sort_by(|a, b| b.scan_result.size.cmp(&a.scan_result.size));
             }
             SortBy::Age => {
                 // Sort by modification time (newer first) - this would require additional metadata
                 // For now, we'll sort by description which contains age info
-                self.items.sort_by(|a, b| a.scan_result.description.cmp(&b.scan_result.description));
+                self.items
+                    .sort_by(|a, b| a.scan_result.description.cmp(&b.scan_result.description));
             }
             SortBy::Risk => {
                 self.items.sort_by(|a, b| {
@@ -335,18 +358,23 @@ impl InteractiveSelector {
                         RiskLevel::Low => 3,
                         RiskLevel::Safe => 4,
                     };
-                    risk_order(&a.scan_result.risk_level).cmp(&risk_order(&b.scan_result.risk_level))
+                    risk_order(&a.scan_result.risk_level)
+                        .cmp(&risk_order(&b.scan_result.risk_level))
                 });
             }
             SortBy::Name => {
                 self.items.sort_by(|a, b| {
-                    a.scan_result.path.file_name()
+                    a.scan_result
+                        .path
+                        .file_name()
                         .and_then(|name| name.to_str())
                         .unwrap_or("")
                         .cmp(
-                            b.scan_result.path.file_name()
+                            b.scan_result
+                                .path
+                                .file_name()
                                 .and_then(|name| name.to_str())
-                                .unwrap_or("")
+                                .unwrap_or(""),
                         )
                 });
             }
@@ -459,9 +487,11 @@ mod tests {
 
     #[test]
     fn test_toggle_selection() {
-        let results = vec![
-            create_test_scan_result("/test/large1.bin", 1000000, RiskLevel::Safe),
-        ];
+        let results = vec![create_test_scan_result(
+            "/test/large1.bin",
+            1000000,
+            RiskLevel::Safe,
+        )];
 
         let mut selector = InteractiveSelector::new(results);
         assert!(!selector.items[0].selected);
@@ -534,7 +564,10 @@ mod tests {
         selector.sort_items();
 
         // Should be sorted with critical first
-        assert_eq!(selector.items[0].scan_result.risk_level, RiskLevel::Critical);
+        assert_eq!(
+            selector.items[0].scan_result.risk_level,
+            RiskLevel::Critical
+        );
         assert_eq!(selector.items[1].scan_result.risk_level, RiskLevel::Medium);
         assert_eq!(selector.items[2].scan_result.risk_level, RiskLevel::Safe);
     }

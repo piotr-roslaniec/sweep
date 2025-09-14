@@ -1,11 +1,11 @@
-/// Smart filtering engine for file analysis
-use std::path::{Path, PathBuf};
-use std::collections::HashMap;
-use std::time::{SystemTime, Duration};
-use std::fs::Metadata;
+use super::{PluginError, RiskLevel};
 use git2::{Repository, Status};
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
-use super::{RiskLevel, PluginError};
+use std::collections::HashMap;
+use std::fs::Metadata;
+/// Smart filtering engine for file analysis
+use std::path::{Path, PathBuf};
+use std::time::{Duration, SystemTime};
 
 /// File type classification
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -131,8 +131,9 @@ impl SmartFilter {
                             return GitFileStatus::Ignored;
                         } else if status.contains(Status::WT_NEW) {
                             return GitFileStatus::Untracked;
-                        } else if status.contains(Status::WT_MODIFIED) ||
-                                  status.contains(Status::INDEX_MODIFIED) {
+                        } else if status.contains(Status::WT_MODIFIED)
+                            || status.contains(Status::INDEX_MODIFIED)
+                        {
                             return GitFileStatus::Modified;
                         } else if !status.is_empty() {
                             return GitFileStatus::Tracked;
@@ -156,7 +157,10 @@ impl SmartFilter {
 
             // add() returns Option<Error>, not Result
             if let Some(e) = builder.add(&gitignore_path) {
-                return Err(PluginError::Configuration(format!("Failed to parse .gitignore: {}", e)));
+                return Err(PluginError::Configuration(format!(
+                    "Failed to parse .gitignore: {}",
+                    e
+                )));
             }
 
             match builder.build() {
@@ -164,7 +168,10 @@ impl SmartFilter {
                     self.gitignore_cache.insert(dir.to_path_buf(), gitignore);
                 }
                 Err(e) => {
-                    return Err(PluginError::Configuration(format!("Failed to build gitignore: {}", e)));
+                    return Err(PluginError::Configuration(format!(
+                        "Failed to build gitignore: {}",
+                        e
+                    )));
                 }
             }
         }
@@ -204,23 +211,24 @@ impl SmartFilter {
                 "zip" | "tar" | "gz" | "bz2" | "xz" | "rar" | "7z" => return FileType::Archive,
 
                 // Media
-                "jpg" | "jpeg" | "png" | "gif" | "bmp" | "svg" | "ico" |
-                "mp4" | "avi" | "mkv" | "mov" | "wmv" |
-                "mp3" | "wav" | "flac" | "ogg" => return FileType::Media,
+                "jpg" | "jpeg" | "png" | "gif" | "bmp" | "svg" | "ico" | "mp4" | "avi" | "mkv"
+                | "mov" | "wmv" | "mp3" | "wav" | "flac" | "ogg" => return FileType::Media,
 
                 // Log
                 "log" | "out" | "err" => return FileType::Log,
 
                 // Document
-                "pdf" | "doc" | "docx" | "xls" | "xlsx" | "ppt" | "pptx" |
-                "odt" | "ods" | "odp" | "txt" | "md" | "rst" => return FileType::Document,
+                "pdf" | "doc" | "docx" | "xls" | "xlsx" | "ppt" | "pptx" | "odt" | "ods"
+                | "odp" | "txt" | "md" | "rst" => return FileType::Document,
 
                 // Source code
-                "rs" | "py" | "js" | "ts" | "java" | "c" | "cpp" | "h" | "hpp" |
-                "go" | "rb" | "php" | "cs" | "swift" | "kt" => return FileType::Source,
+                "rs" | "py" | "js" | "ts" | "java" | "c" | "cpp" | "h" | "hpp" | "go" | "rb"
+                | "php" | "cs" | "swift" | "kt" => return FileType::Source,
 
                 // Configuration
-                "json" | "yaml" | "yml" | "toml" | "ini" | "cfg" | "conf" => return FileType::Configuration,
+                "json" | "yaml" | "yml" | "toml" | "ini" | "cfg" | "conf" => {
+                    return FileType::Configuration
+                }
 
                 // Binary
                 "exe" | "dll" | "so" | "dylib" | "o" | "a" => return FileType::Binary,
@@ -233,8 +241,11 @@ impl SmartFilter {
         if let Some(name) = path.file_name() {
             let name_str = name.to_string_lossy().to_lowercase();
 
-            if name_str.contains("test") || name_str.contains("fixture") ||
-               name_str.contains("sample") || name_str.contains("mock") {
+            if name_str.contains("test")
+                || name_str.contains("fixture")
+                || name_str.contains("sample")
+                || name_str.contains("mock")
+            {
                 return FileType::TestData;
             }
 
@@ -383,13 +394,31 @@ mod tests {
     fn test_file_type_detection() {
         let filter = SmartFilter::new();
 
-        assert_eq!(filter.detect_file_type(Path::new("test.db")), FileType::Database);
-        assert_eq!(filter.detect_file_type(Path::new("archive.zip")), FileType::Archive);
-        assert_eq!(filter.detect_file_type(Path::new("image.jpg")), FileType::Media);
+        assert_eq!(
+            filter.detect_file_type(Path::new("test.db")),
+            FileType::Database
+        );
+        assert_eq!(
+            filter.detect_file_type(Path::new("archive.zip")),
+            FileType::Archive
+        );
+        assert_eq!(
+            filter.detect_file_type(Path::new("image.jpg")),
+            FileType::Media
+        );
         assert_eq!(filter.detect_file_type(Path::new("app.log")), FileType::Log);
-        assert_eq!(filter.detect_file_type(Path::new("main.rs")), FileType::Source);
-        assert_eq!(filter.detect_file_type(Path::new("config.json")), FileType::Configuration);
-        assert_eq!(filter.detect_file_type(Path::new("test-data.csv")), FileType::TestData);
+        assert_eq!(
+            filter.detect_file_type(Path::new("main.rs")),
+            FileType::Source
+        );
+        assert_eq!(
+            filter.detect_file_type(Path::new("config.json")),
+            FileType::Configuration
+        );
+        assert_eq!(
+            filter.detect_file_type(Path::new("test-data.csv")),
+            FileType::TestData
+        );
     }
 
     #[test]

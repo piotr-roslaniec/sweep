@@ -1,5 +1,4 @@
 /// Utility functions for plugin operations
-
 use super::PluginError;
 use regex::Regex;
 
@@ -11,18 +10,18 @@ pub fn parse_size_string(size_str: &str) -> Result<u64, PluginError> {
         .map_err(|e| PluginError::Configuration(format!("Invalid regex: {}", e)))?;
 
     let size_str_upper = size_str.to_uppercase();
-    let captures = re.captures(&size_str_upper)
+    let captures = re
+        .captures(&size_str_upper)
         .ok_or_else(|| PluginError::Configuration(format!("Invalid size format: {}", size_str)))?;
 
-    let number = captures.get(1)
+    let number = captures
+        .get(1)
         .ok_or_else(|| PluginError::Configuration("No number found".to_string()))?
         .as_str()
         .parse::<f64>()
         .map_err(|e| PluginError::Configuration(format!("Invalid number: {}", e)))?;
 
-    let unit = captures.get(2)
-        .map(|m| m.as_str())
-        .unwrap_or("B");
+    let unit = captures.get(2).map(|m| m.as_str()).unwrap_or("B");
 
     let multiplier = match unit {
         "B" | "" => 1.0,
@@ -30,7 +29,12 @@ pub fn parse_size_string(size_str: &str) -> Result<u64, PluginError> {
         "M" | "MB" => 1024.0 * 1024.0,
         "G" | "GB" => 1024.0 * 1024.0 * 1024.0,
         "T" | "TB" => 1024.0 * 1024.0 * 1024.0 * 1024.0,
-        _ => return Err(PluginError::Configuration(format!("Unknown unit: {}", unit))),
+        _ => {
+            return Err(PluginError::Configuration(format!(
+                "Unknown unit: {}",
+                unit
+            )))
+        }
     };
 
     Ok((number * multiplier) as u64)
@@ -73,12 +77,21 @@ mod tests {
         assert_eq!(parse_size_string("1K").unwrap(), 1024);
         assert_eq!(parse_size_string("100MB").unwrap(), 100 * 1024 * 1024);
         assert_eq!(parse_size_string("1GB").unwrap(), 1024 * 1024 * 1024);
-        assert_eq!(parse_size_string("1.5GB").unwrap(), (1.5 * 1024.0 * 1024.0 * 1024.0) as u64);
-        assert_eq!(parse_size_string("2TB").unwrap(), 2 * 1024 * 1024 * 1024 * 1024);
+        assert_eq!(
+            parse_size_string("1.5GB").unwrap(),
+            (1.5 * 1024.0 * 1024.0 * 1024.0) as u64
+        );
+        assert_eq!(
+            parse_size_string("2TB").unwrap(),
+            2 * 1024 * 1024 * 1024 * 1024
+        );
 
         // Test with spaces
         assert_eq!(parse_size_string("100 MB").unwrap(), 100 * 1024 * 1024);
-        assert_eq!(parse_size_string("1.5 GB").unwrap(), (1.5 * 1024.0 * 1024.0 * 1024.0) as u64);
+        assert_eq!(
+            parse_size_string("1.5 GB").unwrap(),
+            (1.5 * 1024.0 * 1024.0 * 1024.0) as u64
+        );
 
         // Test case insensitive
         assert_eq!(parse_size_string("100mb").unwrap(), 100 * 1024 * 1024);
@@ -99,7 +112,10 @@ mod tests {
         assert_eq!(format_size(1024 * 1024), "1.00 MB");
         assert_eq!(format_size(100 * 1024 * 1024), "100 MB");
         assert_eq!(format_size(1024 * 1024 * 1024), "1.00 GB");
-        assert_eq!(format_size((1.5 * 1024.0 * 1024.0 * 1024.0) as u64), "1.50 GB");
+        assert_eq!(
+            format_size((1.5 * 1024.0 * 1024.0 * 1024.0) as u64),
+            "1.50 GB"
+        );
         assert_eq!(format_size(1024_u64 * 1024 * 1024 * 1024), "1.00 TB");
 
         // Test edge cases
