@@ -60,6 +60,43 @@ pub fn detect_cleanable_project(path: &Path) -> Option<Project> {
         project.add_cleanable_dir_if_exists("build");
     }
 
+    // Python projects
+    if exists_in_path(path, "requirements.txt")
+        || exists_in_path(path, "setup.py")
+        || exists_in_path(path, "pyproject.toml")
+        || exists_in_path(path, "Pipfile")
+        || exists_in_path(path, "poetry.lock")
+        || exists_in_path(path, "environment.yml")
+        || exists_in_path(path, "conda.yml")
+    {
+        is_project = true;
+        // Common Python cache and build directories
+        // Find all __pycache__ directories recursively (up to 3 levels deep)
+        project.add_cleanable_dirs_recursive("__pycache__", 3);
+        project.add_cleanable_dir_if_exists(".pytest_cache");
+        project.add_cleanable_dir_if_exists(".mypy_cache");
+        project.add_cleanable_dir_if_exists(".tox");
+        project.add_cleanable_dir_if_exists(".coverage");
+        project.add_cleanable_dir_if_exists("htmlcov");
+        project.add_cleanable_dir_if_exists("dist");
+        project.add_cleanable_dir_if_exists("build");
+        // Handle egg-info directories with dynamic names
+        project.add_cleanable_dirs_by_pattern(".egg-info");
+        project.add_cleanable_dir_if_exists(".eggs");
+        // Virtual environments
+        project.add_cleanable_dir_if_exists("venv");
+        project.add_cleanable_dir_if_exists("env");
+        project.add_cleanable_dir_if_exists(".venv");
+        project.add_cleanable_dir_if_exists(".env");
+        // Conda environments (usually excluded, but if in project dir)
+        project.add_cleanable_dir_if_exists("conda-env");
+        // Jupyter/IPython
+        project.add_cleanable_dir_if_exists(".ipynb_checkpoints");
+        // Sphinx documentation
+        project.add_cleanable_dir_if_exists("_build");
+        project.add_cleanable_dir_if_exists("docs/_build");
+    }
+
     if is_project {
         Some(project)
     } else {
@@ -158,6 +195,33 @@ mod test {
             files: ["pom.xml"],
             dirs: ["src", ".gradle", "build", "spec"],
             cleanable: [".gradle", "build"]
+        );
+    }
+
+    #[test]
+    fn python_requirements() {
+        test_project!(
+            files: ["requirements.txt"],
+            dirs: ["src", "__pycache__", ".pytest_cache", "venv", "dist", "build"],
+            cleanable: ["__pycache__", ".pytest_cache", "venv", "dist", "build"]
+        );
+    }
+
+    #[test]
+    fn python_poetry() {
+        test_project!(
+            files: ["pyproject.toml", "poetry.lock"],
+            dirs: ["src", ".venv", ".mypy_cache", "dist"],
+            cleanable: [".venv", ".mypy_cache", "dist"]
+        );
+    }
+
+    #[test]
+    fn python_setup() {
+        test_project!(
+            files: ["setup.py"],
+            dirs: ["src", "build", ".eggs", ".tox"],
+            cleanable: ["build", ".eggs", ".tox"]
         );
     }
 

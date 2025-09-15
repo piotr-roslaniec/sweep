@@ -49,6 +49,61 @@ impl Project {
         }
     }
 
+    /// Add directories matching a pattern (e.g., "*.egg-info" for Python)
+    pub fn add_cleanable_dirs_by_pattern(&mut self, pattern: &str) {
+        if let Ok(entries) = std::fs::read_dir(&self.root) {
+            for entry in entries.flatten() {
+                if let Some(name) = entry.file_name().to_str() {
+                    if name.ends_with(pattern) && entry.path().is_dir() {
+                        let path = entry.path();
+                        if !self.dependency_dirs.contains(&path) {
+                            self.dependency_dirs.push(path);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// Recursively find and add directories with a specific name (e.g., "__pycache__")
+    pub fn add_cleanable_dirs_recursive(&mut self, dir_name: &str, max_depth: usize) {
+        self.find_dirs_recursive(&self.root.clone(), dir_name, 0, max_depth);
+    }
+
+    fn find_dirs_recursive(
+        &mut self,
+        path: &Path,
+        target_name: &str,
+        depth: usize,
+        max_depth: usize,
+    ) {
+        if depth > max_depth {
+            return;
+        }
+
+        if let Ok(entries) = std::fs::read_dir(path) {
+            for entry in entries.flatten() {
+                let entry_path = entry.path();
+                if entry_path.is_dir() {
+                    if let Some(name) = entry.file_name().to_str() {
+                        if name == target_name && !self.dependency_dirs.contains(&entry_path) {
+                            self.dependency_dirs.push(entry_path.clone());
+                        }
+                        // Don't recurse into hidden directories or common large directories
+                        if !name.starts_with('.') && name != "node_modules" && name != "target" {
+                            self.find_dirs_recursive(
+                                &entry_path,
+                                target_name,
+                                depth + 1,
+                                max_depth,
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     pub fn load_swpfile(&mut self, filename: &str) {
         let paths = match parse_swpfile(&self.root, &PathBuf::from(filename)) {
             Ok(paths) => paths,
