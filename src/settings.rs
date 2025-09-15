@@ -78,7 +78,7 @@ impl Settings {
     /// # Returns
     /// * `true`  - If the path matches the regex
     /// * `false` - If the regex and path don't match, if no ignore
-    ///             regex was given, or if the path is empty
+    ///   regex was given, or if the path is empty
     pub fn is_path_ignored(&self, path: &Path) -> bool {
         if self.ignore.is_none() {
             return false;
