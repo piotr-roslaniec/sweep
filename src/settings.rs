@@ -132,7 +132,6 @@ mod tests {
 
         match validate.unwrap_err() {
             SettingsError::InvalidPath(_) => (),
-            _ => panic!("Unexpected error returned"),
         }
     }
 
