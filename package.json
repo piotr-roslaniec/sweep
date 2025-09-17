@@ -16,7 +16,7 @@
     "docs:build": "vuepress build docs && ncp docs/_redirects docs/.vuepress/dist/_redirects"
   },
   "dependencies": {
-    "binary-install": "^0.0.1"
+    "binary-install": "^0.1.0"
   },
   "devDependencies": {
     "ncp": "^2.0.0",
