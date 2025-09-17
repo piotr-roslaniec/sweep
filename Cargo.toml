@@ -16,7 +16,7 @@ path = "src/main.rs"
 
 [dependencies]
 crossbeam = "0.7.3"
-crossterm = "0.20.0"
+crossterm = "0.29.0"
 dunce = "1.0.0"
 git2 = "0.13.20"
 ignore = "0.4.18"
